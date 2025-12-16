@@ -1,0 +1,57 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Flask
+instance/
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ---- Secrets / env ----
+.env
+.env.*
+*.pem
+*.key
+
+# ---- Node / Playwright ----
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Playwright artifacts
+test-results/
+playwright-report/
+blob-report/
+.trace/
+*.zip
+
+# ---- Project data outputs (adjust if you want to keep them) ----
+# If you store sqlite or local db files in src/data/
+src/data/*.db
+src/data/*.sqlites
+src/data/*.sqlite3
+poc_data.db
+
+# If you generate exports or dumps
+*.csv
+*.jsonl
+*.har

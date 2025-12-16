@@ -1,0 +1,78 @@
+name: Local run smoke test (Win + Linux + macOS)
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # ---------- Install deps ----------
+      - name: Install dependencies (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install -r src/requirements.txt
+
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          python -m venv .venv
+          .\.venv\Scripts\Activate.ps1
+          python -m pip install --upgrade pip
+          pip install -r src/requirements.txt
+
+      # ---------- Start server + curl ----------
+      - name: Start app and verify HTTP (Linux/macOS)
+        if: runner.os != 'Windows'
+        env:
+          RP_ID: "localhost"
+          ORIGIN: "http://localhost:5000"
+        run: |
+          source .venv/bin/activate
+          python src/app.py &
+          for i in {1..45}; do
+            if curl -sSf http://localhost:5000 >/dev/null; then
+              echo "Server is up"
+              break
+            fi
+            sleep 1
+          done
+          curl -sSf http://localhost:5000 >/dev/null
+
+      - name: Start app and verify HTTP (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          RP_ID: "localhost"
+          ORIGIN: "http://localhost:5000"
+        run: |
+          .\.venv\Scripts\Activate.ps1
+          Start-Process -NoNewWindow -FilePath python -ArgumentList "src\app.py"
+          for ($i=0; $i -lt 45; $i++) {
+            try {
+              Invoke-WebRequest -UseBasicParsing http://localhost:5000 | Out-Null
+              Write-Host "Server is up"
+              break
+            } catch {
+              Start-Sleep -Seconds 1
+            }
+          }
+          Invoke-WebRequest -UseBasicParsing http://localhost:5000 | Out-Null
