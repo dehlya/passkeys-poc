@@ -3,8 +3,8 @@
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Flask](https://img.shields.io/badge/flask-3.0+-green.svg)](https://flask.palletsprojects.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![E2E Tests](https://github.com/dehlya/passkeys-demo/actions/workflows/e2e.yml/badge.svg)](https://github.com/dehlya/passkeys-demo/actions/workflows/e2e.yml)
-[![Cross-Platform](https://github.com/dehlya/passkeys-demo/actions/workflows/smoke.yml/badge.svg)](https://github.com/dehlya/passkeys-demo/actions/workflows/smoke.yml)
+[![E2E Tests](https://github.com/dehlya/passkeys-poc/actions/workflows/webauthn-e2e.yml/badge.svg)](https://github.com/dehlya/passkeys-poc/actions/workflows/webauthn-e2e.yml)
+[![Cross-Platform](https://github.com/dehlya/passkeys-poc/actions/workflows/all-os-smoke.yml/badge.svg)](https://github.com/dehlya/passkeys-poc/actions/workflows/all-os-smoke.yml)
 
 > **Implementation Study**: Comparing manual WebAuthn/FIDO2 implementation vs. commercial SaaS solutions
 
@@ -51,8 +51,8 @@ This project investigates **Authenticator Assurance Level 2 (AAL2)** authenticat
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/dehlya/passkeys-demo.git
-   cd passkeys-demo
+   git clone https://github.com/dehlya/passkeys-poc.git
+   cd passkeys-poc
    ```
 
 2. **Set up Python environment**
@@ -306,7 +306,7 @@ Use at your own risk. The authors assume no liability for misuse or security vul
 
 For questions about this project, please open an issue on GitHub.
 
-**Project Link**: [https://github.com/dehlya/passkeys-demo](https://github.com/dehlya/Passkeys_Demo)
+**Project Link**: [https://github.com/dehlya/passkeys-poc](https://github.com/dehlya/passkeys-poc)
 
 ---
 

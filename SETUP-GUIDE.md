@@ -22,8 +22,8 @@ pip --version
 ### 1. Clone & Navigate
 
 ```bash
-git clone https://github.com/dehlya/passkeys-demo.git
-cd passkeys-demo
+git clone https://github.com/dehlya/passkeys-poc.git
+cd passkeys-poc
 ```
 
 ### 2. Create Virtual Environment
@@ -231,7 +231,7 @@ After setup:
 
 ## Still Having Issues?
 
-1. Check existing [GitHub Issues](https://github.com/dehlya/passkeys-demo/issues)
+1. Check existing [GitHub Issues](https://github.com/dehlya/passkeys-poc/issues)
 2. Open a new issue with:
    - OS and version
    - Python version

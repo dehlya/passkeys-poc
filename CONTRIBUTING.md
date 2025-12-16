@@ -50,8 +50,8 @@ Since this is an educational POC, these are **intentionally not included**:
 ### 1. Fork & Clone
 
 ```bash
-git clone https://github.com/dehlya/passkeys-demo.git
-cd passkeys-demo
+git clone https://github.com/dehlya/passkeys-poc.git
+cd passkeys-poc
 ```
 
 ### 2. Create a Branch
