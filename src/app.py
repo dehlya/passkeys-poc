@@ -48,6 +48,7 @@ ORIGIN = "http://localhost:5000"
 def create_app():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = config.SECRET_KEY
+    
     app.config["SESSION_COOKIE_HTTPONLY"] = config.SESSION_COOKIE_HTTPONLY
     app.config["SESSION_COOKIE_SAMESITE"] = config.SESSION_COOKIE_SAMESITE
     app.config["SESSION_COOKIE_SECURE"] = config.SESSION_COOKIE_SECURE
@@ -348,7 +349,7 @@ def create_app():
                 "browser": browser,
                 "platform": os_name,
                 "device": ua.device.family if ua.device.family != "Other" else "Desktop",
-                "ip": "127.0.0.1", # Localhost for PoC
+                "ip": "localhost", # Localhost for PoC
                 "scheme": request.scheme,
                 "host": request.host
             }
@@ -430,4 +431,6 @@ def create_app():
 
 if __name__ == "__main__":
     app = create_app()
+    print("\n[!] IMPORTANT: Access this app at http://localhost:5000")
+    print("   (WebAuthn requires a secure context: localhost or https)\n")
     app.run(debug=True, host="0.0.0.0", port=5000)
