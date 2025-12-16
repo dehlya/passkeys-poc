@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block content %}
+  <section class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <p class="section-eyebrow">Architecture Map</p>
+            <h2>The Anatomy of Your Session</h2>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+             {% if user %}
+                <span class="trust-pill"><span class="pill-dot"></span> Authenticated</span>
+             {% endif %}
+             <button id="btn-reset-data" class="button secondary small">Reset Data</button>
+        </div>
+    </div>
+    <p>
+      This timeline traces the exact HTTP requests and browser actions that occurred 
+      during your last login ceremony.
+    </p>
+  </section>
+
+  <div id="vendor-warning" class="hidden" style="margin-top: 2rem;">
+      <div class="card" style="border-left: 4px solid var(--warning); background: rgba(245, 158, 11, 0.05);">
+          <h3 style="color: var(--warning); margin-top: 0;">⚠️ Audit Trail Unavailable</h3>
+          <p><strong>Mode Detected:</strong> Vendor (Corbado) / SaaS</p>
+          <p>You are successfully authenticated, but the <strong>Protocol Auditing Lab</strong> cannot visualize the handshake.</p>
+          
+          <div style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 8px; margin-top: 1rem;">
+              <strong>Why is this empty?</strong>
+              <ul style="margin-top: 0.5rem; color: #d0d8f3;">
+                  <li>Vendor widgets run inside protected <code>iframes</code> (Shadow DOM).</li>
+                  <li>The cryptographic signature is sent directly to the Vendor's cloud.</li>
+                  <li>The hosting application (us) receives only a "Success" token, not the raw proof.</li>
+              </ul>
+          </div>
+          <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--subtle);">
+              <em>This demonstrates the "Black Box" trade-off of buying vs. building authentication.</em>
+          </p>
+      </div>
+  </div>
+
+  <div id="forensics-timeline" class="timeline">
+    
+    <div class="timeline-item">
+      <div class="timeline-marker"></div>
+      <div class="timeline-content">
+        <span class="method-badge method-get">1. INITIALIZATION</span>
+        <h3>The Challenge</h3>
+        <p>The server generates a random 32-byte challenge to prevent replay attacks.</p>
+        
+        <div class="live-data hidden" id="step-1-data">
+            <div class="mini-terminal-header">
+                <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span>
+                <span style="margin-left: 8px; color: #8b949e; font-size: 0.7rem;">SERVER OUTPUT</span>
+            </div>
+            <pre class="code-block" id="code-1"></pre>
+        </div>
+        <div class="missing-data" id="step-1-missing">
+            ⚠️ No active session data. Log in to see this step.
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-marker"></div>
+      <div class="timeline-content">
+        <span class="method-badge method-get" style="background: rgba(255,255,255,0.1); color: white;">2. BROWSER API</span>
+        <h3>The Signature</h3>
+        <p>
+          Your device (Windows Hello/TouchID) unlocks the private key and signs the challenge.
+          Crucially, it includes the <strong>Origin</strong> (<code>{{ request.host }}</code>) in the signature to prevent phishing.
+        </p>
+
+        <div class="live-data hidden" id="step-2-data">
+            <div class="mini-terminal-header">
+                <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span>
+                <span style="margin-left: 8px; color: #8b949e; font-size: 0.7rem;">DEVICE RESPONSE</span>
+            </div>
+            <pre class="code-block" id="code-2"></pre>
+        </div>
+        <div class="missing-data" id="step-2-missing">
+            ⚠️ Waiting for user interaction...
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-marker"></div>
+      <div class="timeline-content">
+        <span class="method-badge method-post">3. VERIFICATION</span>
+        <h3>The Proof</h3>
+        <p>
+          The server verifies the signature against the stored Public Key. If valid, a session cookie is issued.
+        </p>
+
+        <div class="live-data hidden" id="step-3-data">
+            <div class="mini-terminal-header">
+                <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span>
+                <span style="margin-left: 8px; color: #8b949e; font-size: 0.7rem;">VERIFICATION RESULT</span>
+            </div>
+            <pre class="code-block" id="code-3"></pre>
+        </div>
+         <div class="missing-data" id="step-3-missing">
+            ⚠️ Waiting for completion...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script nonce="{{ csp_nonce }}">
+    function clearFlow() {
+        sessionStorage.removeItem('fido2_flow');
+        window.location.reload();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const resetBtn = document.getElementById('btn-reset-data');
+        if(resetBtn) resetBtn.addEventListener('click', clearFlow);
+
+        // --- INTELLIGENT STATE DETECTION ---
+        const isLoggedIn = {{ 'true' if user else 'false' }};
+        const rawData = sessionStorage.getItem('fido2_flow');
+        
+        const vendorWarning = document.getElementById('vendor-warning');
+        const timeline = document.getElementById('forensics-timeline');
+
+        // SCENARIO A: Vendor Mode (Logged In + No Logs)
+        if (isLoggedIn && !rawData) {
+            vendorWarning.classList.remove('hidden');
+            timeline.classList.add('hidden'); // Hide the empty timeline
+            return; 
+        }
+
+        // SCENARIO B: Manual Mode (Logs Exist) OR Not Logged In
+        if (!rawData) return; // Keep default "Missing Data" text if not logged in
+
+        try {
+            const flow = JSON.parse(rawData);
+            
+            // Step 1: Challenge
+            const step1 = flow.find(f => f.label.includes("CHALLENGE"));
+            if (step1) {
+                document.getElementById('step-1-missing').classList.add('hidden');
+                document.getElementById('step-1-data').classList.remove('hidden');
+                document.getElementById('code-1').textContent = JSON.stringify(step1.data, null, 2);
+            }
+
+            // Step 2: Signature
+            const step2 = flow.find(f => f.label.includes("RESPONSE") || f.label.includes("SIGNATURE"));
+            if (step2) {
+                document.getElementById('step-2-missing').classList.add('hidden');
+                document.getElementById('step-2-data').classList.remove('hidden');
+                document.getElementById('code-2').textContent = JSON.stringify(step2.data, null, 2);
+            }
+
+            // Step 3: Success
+            const step3 = flow.find(f => f.label.includes("SUCCESS"));
+            if (step3) {
+                document.getElementById('step-3-missing').classList.add('hidden');
+                document.getElementById('step-3-data').classList.remove('hidden');
+                document.getElementById('code-3').textContent = JSON.stringify(step3.data, null, 2);
+            }
+
+        } catch (e) {
+            console.error("Error parsing flow data", e);
+        }
+    });
+  </script>
+
+  <style>
+    /* TIMELINE & TERMINAL STYLES */
+    .timeline { position: relative; padding-left: 2rem; margin: 2rem 0; border-left: 2px solid rgba(255, 255, 255, 0.1); }
+    .timeline-item { position: relative; margin-bottom: 2.5rem; }
+    .timeline-marker { position: absolute; left: -2.6rem; top: 0; width: 1.2rem; height: 1.2rem; background: var(--bg); border: 2px solid var(--accent); border-radius: 50%; box-shadow: 0 0 0 4px var(--bg); }
+    .timeline-content { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1.5rem; }
+    
+    .live-data { margin-top: 1rem; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .mini-terminal-header { background: #161b22; padding: 0.4rem 0.8rem; border-bottom: 1px solid #30363d; display: flex; align-items: center; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+    .dot-red { background: #ff5f56; } .dot-yellow { background: #ffbd2e; } .dot-green { background: #27c93f; }
+
+    .code-block { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #c9d1d9; white-space: pre-wrap; margin: 0; padding: 1rem; max-height: 250px; overflow-y: auto; }
+    .code-block::-webkit-scrollbar { width: 6px; }
+    .code-block::-webkit-scrollbar-track { background: #0d1117; }
+    .code-block::-webkit-scrollbar-thumb { background: #30363d; border-radius: 10px; }
+
+    .missing-data { margin-top: 1rem; font-size: 0.85rem; color: var(--subtle); font-style: italic; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 6px; border: 1px dashed rgba(255,255,255,0.1); }
+    .hidden { display: none !important; }
+    .method-badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-family: monospace; font-size: 0.75rem; font-weight: bold; margin-bottom: 0.5rem; }
+    .method-get { background: rgba(34, 211, 238, 0.15); color: #22d3ee; }
+    .method-post { background: rgba(110, 231, 183, 0.15); color: #6ee7b7; }
+  </style>
+{% endblock %}

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Passkeys PoC | Security Lab</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔐</text></svg>">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="branding" href="{{ url_for('index') }}">
+          <div class="logo-mark">
+            <span class="logo-dot"></span>
+          </div>
+          <div>
+            <div class="logo">Passkeys Lab</div>
+            <div class="logo-subtitle">FIDO2 Protocol Auditing</div>
+          </div>
+        </a>
+
+        <nav class="primary-nav">
+          <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' }}">Overview</a>
+          
+          {% if user %}
+            <a href="{{ url_for('workflow') }}" class="{{ 'active' if request.endpoint == 'workflow' }}">Workflow</a>
+            <a href="{{ url_for('learn') }}" class="{{ 'active' if request.endpoint == 'learn' }}">
+              <span class="live-dot"></span> Analysis
+            </a>
+            <a href="{{ url_for('protected') }}" class="{{ 'active' if request.endpoint == 'protected' }}">Dashboard</a>
+            
+            <div class="user-pill">
+              <div class="user-avatar">{{ user[:2].upper() }}</div>
+              <span class="user-name">{{ user }}</span>
+              <form action="{{ url_for('logout') }}" method="post" class="logout-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                <button type="submit" class="logout-icon" title="Logout">⏻</button>
+              </form>
+            </div>
+          {% else %}
+            <a href="{{ url_for('learn') }}" class="{{ 'active' if request.endpoint == 'learn' }}">Documentation</a>
+            <a href="{{ url_for('login') }}" class="button primary small">Login Demo</a>
+          {% endif %}
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-container">
+            {% for category, msg in messages %}
+              <div class="flash flash-{{ category }}">{{ msg }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p><strong>IT Security Lab</strong> • Authenticator Assurance Level 2 (AAL2) Simulator</p>
+        <div style="display: flex; gap: 1rem; font-size: 0.85rem; color: var(--subtle);">
+            <span>🔑 FIDO2: <strong>Active</strong></span>
+            <span>📡 Telemetry: <strong>Recording</strong></span>
+            <span>🛡️ CSP: <strong>Enforced</strong></span>
+        </div>
+      </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='main.js') }}" defer></script>
+  </body>
+</html>

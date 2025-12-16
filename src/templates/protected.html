@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="grid" style="grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; align-items: start;">
+
+  <section>
+    
+    <div class="card" style="margin-top: 0; margin-bottom: 2rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <p class="section-eyebrow">Secure Session</p>
+          <h2 style="margin: 0;">Identity Verified</h2>
+        </div>
+        <form action="{{ url_for('logout') }}" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+          <button type="submit" class="button secondary small">Log Out</button>
+        </form>
+      </div>
+      
+      <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; display: flex; align-items: center; gap: 1rem;">
+        <div style="font-size: 2rem;">🔐</div>
+        <div>
+            <strong style="color: #34d399;">Authentication Successful</strong><br>
+            <span class="text-muted" style="font-size: 0.9rem;">Private Key remained protected in Hardware Enclave.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Session Telemetry</h3>
+      <div style="display: grid; gap: 0.5rem; margin-top: 1rem;">
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem;">
+            <span class="text-muted">User Handle</span>
+            <span style="font-family: monospace; color: var(--accent);">{{ user }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem;">
+            <span class="text-muted">RP ID (Domain)</span>
+            <span style="font-family: monospace;">{{ security_summary.rp_id }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem;">
+            <span class="text-muted">Origin Bound</span>
+            <span style="font-family: monospace;">{{ security_summary.origin }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding-top: 0.2rem;">
+            <span class="text-muted">Method</span>
+            <span class="info-chip">{{ security_summary.event }}</span>
+          </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h3>Your Passkeys</h3>
+          <span class="text-muted" style="font-size: 0.8rem;">Stored Public Keys</span>
+      </div>
+      <div id="credential-list" style="margin-top: 1rem;">
+          <p class="text-muted">Loading...</p>
+      </div>
+    </div>
+  </section>
+
+  <section style="position: sticky; top: 2rem; max-height: calc(100vh - 4rem); overflow-y: auto; scrollbar-width: none;">
+    
+    <div class="terminal-window">
+      <div class="terminal-header">
+        <div class="terminal-dots">
+          <div class="dot dot-red"></div>
+          <div class="dot dot-yellow"></div>
+          <div class="dot dot-green"></div>
+        </div>
+        <div class="terminal-title">📡 Forensic Evidence (Replay)</div>
+      </div>
+      <div id="persistent-xray" class="terminal-body">
+          <span style="color: #8b949e;">// Accessing session logs...</span>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 1rem; padding: 1rem; border-color: var(--accent);">
+      <h4 style="margin: 0; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
+        <span style="color: var(--accent);">✔</span> Chain of Custody Verified
+      </h4>
+      <p class="text-muted" style="font-size: 0.8rem; margin-top: 0.5rem;">
+        The data above is the <strong>exact cryptographic proof</strong> captured during your login ceremony. 
+        It proves you signed the challenge <code>{{ security_summary.challenge_used }}</code> without revealing any secrets.
+      </p>
+    </div>
+  </section>
+
+</div>
+
+<script nonce="{{ csp_nonce }}">
+    // Load Credentials List
+    async function loadCredentials() {
+      const container = document.getElementById('credential-list');
+      try {
+        const res = await fetch('/api/credentials');
+        const creds = await res.json();
+        
+        if (creds.length === 0) {
+          container.innerHTML = '<p class="text-muted">No stored passkeys found.</p>';
+          return;
+        }
+
+        let html = '<ul style="list-style: none; padding: 0; margin: 0;">';
+        creds.forEach(c => {
+          const shortId = c.id.substring(0, 8) + "...";
+          html += `
+            <li style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+              <span style="font-size: 0.9rem;">🔑 ID: <code style="color: var(--accent);">${shortId}</code></span>
+              <button class="button warning small btn-revoke" data-id="${c.id}" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Revoke</button>
+            </li>`;
+        });
+        html += '</ul>';
+        container.innerHTML = html;
+
+        document.querySelectorAll('.btn-revoke').forEach(btn => {
+          btn.addEventListener('click', function() { deleteCredential(this.getAttribute('data-id')); });
+        });
+
+      } catch (e) { container.innerText = "Error loading keys."; }
+    }
+
+    async function deleteCredential(id) {
+      if(!confirm("Revoke this passkey?")) return;
+      await fetch(`/api/credentials/${id}`, { 
+        method: 'DELETE',
+        headers: { 'X-CSRF-Token': '{{ csrf_token }}' }
+      });
+      loadCredentials(); 
+    }
+
+    // 2. Load Persistent Logs (The "X-Ray")
+    function loadPersistentLogs() {
+        const consoleEl = document.getElementById('persistent-xray');
+        const rawData = sessionStorage.getItem('fido2_flow');
+        
+        if (!rawData) {
+            consoleEl.innerHTML = '<span style="color: #ff7b72;">// No forensic data found.\n// Did you login via the Manual Lab?</span>';
+            return;
+        }
+
+        try {
+            const logs = JSON.parse(rawData);
+            consoleEl.textContent = ""; // Clear loading message
+
+            logs.forEach(entry => {
+                const timestamp = new Date(entry.timestamp).toLocaleTimeString();
+                const jsonPretty = JSON.stringify(entry.data, null, 2);
+                consoleEl.textContent += `[${timestamp}] ${entry.label}:\n${jsonPretty}\n\n`;
+            });
+            
+            // Add a final success marker
+            consoleEl.textContent += `[${new Date().toLocaleTimeString()}] SESSION ESTABLISHED:\nStatus: Secure\nUser: {{ user }}\n`;
+
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        loadCredentials();
+        loadPersistentLogs();
+    });
+</script>
+
+<style>
+  /* Ensure grid stacking on mobile */
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: 1fr !important; }
+  }
+</style>
+{% endblock %}

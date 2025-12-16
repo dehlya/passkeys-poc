@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="grid" style="grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; align-items: start;">
+  
+  <section class="card" style="margin-top: 0;">
+    <p class="section-eyebrow">Access Control</p>
+    <h2 style="margin-bottom: 1.5rem;">Authenticate</h2>
+
+    <div class="tab-container">
+      <button id="btn-tab-forensics" class="tab-btn active">🛠️ Protocol Auditing (Build)</button>
+      <button id="btn-tab-vendor" class="tab-btn">☁️ Vendor (Buy)</button>
+    </div>
+
+    <div id="tab-forensics" class="tab-content active">
+      <div style="margin-bottom: 1.5rem;">
+        <p class="text-muted">
+          <strong>Manual Protocol Mode:</strong> Direct interaction with the WebAuthn API. 
+          This mode enables the <span style="color: var(--accent);">Live X-Ray</span> on the right.
+        </p>
+      </div>
+
+      <div class="action-panel">
+        <div style="text-align: center;">
+          <h3 style="margin: 0;">New User?</h3>
+          <p class="text-muted" style="font-size: 0.9rem;">Generate a new key pair in your Secure Enclave.</p>
+          <div style="margin-top: 0.5rem;">
+            <input type="text" id="username-input" placeholder="Enter username (e.g. agent-007)" 
+                   style="background: rgba(0,0,0,0.3); border: 1px solid #333; color: white; padding: 0.5rem; border-radius: 6px; width: 100%; margin-bottom: 0.5rem;">
+            <input type="hidden" id="csrf-token-field" value="{{ csrf_token }}">
+            <button class="button primary" type="button" id="btn-register-passkey" style="width: 100%;">
+              🧬 Register Identity
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-panel" style="margin-top: 1rem; border-color: var(--accent);">
+        <div style="text-align: center;">
+          <h3 style="margin: 0;">Returning User?</h3>
+          <p class="text-muted" style="font-size: 0.9rem;">Sign a challenge to prove possession.</p>
+          <button class="button secondary" type="button" id="btn-login-passkey" style="width: 100%; margin-top: 0.5rem;">
+            🔑 Authenticate
+          </button>
+        </div>
+      </div>
+      
+      <p id="webauthn-status" class="status-text" style="text-align: center; color: var(--accent); min-height: 1.5em;">
+        Ready for ceremony...
+      </p>
+    </div>
+
+    <div id="tab-vendor" class="tab-content">
+      <p class="text-muted" style="margin-bottom: 1rem;">
+        <strong>SaaS Mode:</strong> A "black box" integration using Corbado. 
+        Notice how the X-Ray terminal remains empty because the cryptography is hidden inside the widget.
+      </p>
+      <div id="corbado-auth" class="auth-container"></div>
+    </div>
+  </section>
+
+  <section style="position: sticky; top: 2rem;">
+    <div class="terminal-window">
+      <div class="terminal-header">
+        <div class="terminal-dots">
+          <div class="dot dot-red"></div>
+          <div class="dot dot-yellow"></div>
+          <div class="dot dot-green"></div>
+        </div>
+        <div class="terminal-title">📡 Live Protocol Trace</div>
+      </div>
+      <div id="xray-console" class="terminal-body">
+<span style="color: #8b949e;">// System Ready.
+// Waiting for FIDO2 interaction...
+// Select "Protocol Auditing (Build)" to begin.</span>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 1rem; padding: 1rem;">
+      <h4 style="margin: 0; font-size: 0.9rem;">Why 2 Modes?</h4>
+      <p class="text-muted" style="font-size: 0.8rem; margin-top: 0.5rem;">
+        <strong>Protocol Auditing Mode</strong> allows us to hook into the browser API and visualize the packets. 
+        <strong>Vendor Mode</strong> handles everything for us, which is easier for devs but harder for security analysts to audit.
+      </p>
+    </div>
+  </section>
+
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/@corbado/web-js@latest/dist/bundle/index.css" />
+<script src="https://unpkg.com/@corbado/web-js@latest/dist/bundle/index.js"></script>
+
+<script nonce="{{ csp_nonce }}">
+  let corbadoMounted = false;
+
+  function switchTab(tabName) {
+    // Visual Switch
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+    
+    // Update button states (Manual Logic)
+    const btnId = tabName === 'forensics' ? 'btn-tab-forensics' : 'btn-tab-vendor';
+    document.getElementById(btnId).classList.add('active');
+
+    // 2. Lazy Load Corbado
+    if (tabName === 'vendor' && !corbadoMounted) {
+      initCorbado();
+      corbadoMounted = true;
+    }
+  }
+
+  async function initCorbado() {
+    const authElement = document.getElementById('corbado-auth');
+    authElement.innerHTML = '<p class="text-muted">Loading vendor widget...</p>';
+    
+    try {
+        await Corbado.load({
+          projectId: "{{ project_id }}",
+          darkMode: "on",
+        });
+
+        Corbado.mountAuthUI(authElement, {
+          onLoggedIn: () => {
+            window.location.href = "/corbado/callback";
+          },
+        });
+    } catch (e) {
+        authElement.innerHTML = `<p style="color: #fb7185;">Vendor Error: ${e.message}</p>`;
+    }
+  }
+
+  // FIXED: Attach event listeners in JS instead of HTML
+  document.addEventListener("DOMContentLoaded", () => {
+    const forensicsBtn = document.getElementById('btn-tab-forensics');
+    const vendorBtn = document.getElementById('btn-tab-vendor');
+
+    if (forensicsBtn) forensicsBtn.addEventListener('click', () => switchTab('forensics'));
+    if (vendorBtn) vendorBtn.addEventListener('click', () => switchTab('vendor'));
+  });
+  document.addEventListener("DOMContentLoaded", () => {
+      // SECURITY FIX: 
+      // Clear any forensic logs from previous sessions immediately.
+      // This prevents "Zombie Logs" where a Vendor login (which has no logs)
+      // accidentally displays the X-Ray data from a previous Manual login. (just in case)
+      sessionStorage.removeItem('fido2_flow');
+      console.log("Forensics Lab: Previous session evidence destroyed.");
+  });
+</script>
+
+<style>
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: 1fr !important; }
+  }
+</style>
+{% endblock %}

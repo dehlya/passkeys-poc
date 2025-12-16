@@ -1,0 +1,6 @@
+Flask
+python-dotenv
+requests
+webauthn>=2.0.0
+passkeys
+user-agents

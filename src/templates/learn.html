@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block content %}
+
+  <section class="card hero-card" style="padding: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div>
+        <p class="section-eyebrow">
+          {% if user %} <span class="live-dot"></span> LIVE FORENSICS {% else %} REFERENCE MATERIAL {% endif %}
+        </p>
+        <h1 style="margin: 0.5rem 0;">
+          {% if user %} Identity Assurance Report {% else %} FIDO2 Security Model {% endif %}
+        </h1>
+        <p style="margin-top: 0.5rem; color: var(--subtle);">
+          {% if user %}
+            Analyzing active session for user <strong>{{ user }}</strong>.
+          {% else %}
+            Technical documentation and security comparison.
+          {% endif %}
+        </p>
+      </div>
+      {% if user %}
+        <div class="trust-pill" style="background: rgba(16, 185, 129, 0.1); color: #34d399; border-color: #059669;">
+          ✅ Authenticated
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  {% if user %}
+  <div class="grid grid-3">
+    
+    <article class="card" style="margin-top: 0; border-top: 3px solid var(--accent);">
+      <h3>💻 Endpoint Context</h3>
+      <div style="margin-top: 1rem;">
+        <div class="data-row">
+          <span class="data-label">Platform</span>
+          <span class="data-val">{{ ctx.platform }}</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Client</span>
+          <span class="data-val">{{ ctx.browser_raw }}</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">IP Address</span>
+          <span class="data-val">{{ ctx.ip }}</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="card" style="margin-top: 0; border-top: 3px solid var(--accent-strong);">
+      <h3>🔐 Crypto Analysis</h3>
+      <div style="margin-top: 1rem;">
+        <div class="data-row">
+          <span class="data-label">Protocol</span>
+          <span class="data-val">{{ ctx.auth_method }}</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Curve</span>
+          <span class="data-val">secp256r1 (ES256)</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Transport</span>
+          <span class="data-val">{{ ctx.transport_guess }}</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="card" style="margin-top: 0; border-top: 3px solid #f59e0b;">
+      <h3>🛡️ Threat Model</h3>
+      <ul class="highlight-list" style="margin-top: 1rem;">
+        <li>
+            <span class="highlight-icon">✅</span>
+            <div>
+                <strong>Phishing:</strong> IMPOSSIBLE
+                <div class="text-muted" style="font-size: 0.8rem;">Origin {{ ctx.origin }} bound</div>
+            </div>
+        </li>
+        <li>
+            <span class="highlight-icon">✅</span>
+            <div>
+                <strong>Replay:</strong> BLOCKED
+                <div class="text-muted" style="font-size: 0.8rem;">Nonce verified</div>
+            </div>
+        </li>
+      </ul>
+    </article>
+  </div>
+  
+  <div style="text-align: center; margin-top: 2rem;">
+      <a href="{{ url_for('workflow') }}" class="button primary">View Protocol Timeline &rarr;</a>
+  </div>
+
+  {% else %}
+  
+  <div class="grid grid-3">
+      <section class="card concept-card">
+          <div>
+              <span class="reality-badge">Legacy</span>
+              <h3>The Password Problem</h3>
+              <p>
+                Passwords are "Shared Secrets". Both you and the server know it. 
+                If the server is hacked, your secret is stolen. If you type it on a fake site, it is stolen.
+              </p>
+          </div>
+          <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.8rem; margin-top: 1rem;">
+              User: "hunter2"<br>
+              Server: "hunter2" == "hunter2" ?<br>
+              Result: <span style="color: #fb7185;">Vulnerable</span>
+          </div>
+      </section>
+
+      <section class="card concept-card">
+          <div>
+              <span class="reality-badge" style="background: rgba(110, 231, 183, 0.15); color: #6ee7b7; border-color: #6ee7b7;">The Fix</span>
+              <h3>Asymmetric Keys</h3>
+              <p>
+                Passkeys split the secret into two parts. The <strong>Private Key</strong> stays on your phone. 
+                The <strong>Public Key</strong> lives on the server.
+              </p>
+          </div>
+          <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.8rem; margin-top: 1rem;">
+              Server: "Sign this Challenge"<br>
+              Device: Signs with Private Key<br>
+              Result: <span style="color: #6ee7b7;">Proof without Secret</span>
+          </div>
+      </section>
+
+      <section class="card concept-card">
+          <div>
+              <span class="theory-badge">Requirement</span>
+              <h3>Phishing Resistance</h3>
+              <p>
+                The browser automatically checks the URL domain. If you are on <code>evil-site.com</code>, 
+                the browser refuses to release the passkey signature for <code>localhost</code>.
+              </p>
+          </div>
+          <div style="text-align: center; margin-top: 1rem;">
+             <a href="{{ url_for('login') }}" class="button primary">Try the Demo</a>
+          </div>
+      </section>
+  </div>
+  {% endif %}
+{% endblock %}

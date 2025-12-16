@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block content %}
+  <section class="card hero-card" style="text-align: center; padding: 4rem 2rem; position: relative; overflow: hidden; border: 1px solid var(--accent-strong);">
+    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 60%); pointer-events: none;"></div>
+    
+    <div style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 99px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); color: var(--accent-strong); font-size: 0.8rem; font-weight: bold; margin-bottom: 1rem;">
+      63-22 IT Security Lab
+    </div>
+    
+    <h1 class="hero-title" style="margin-inline: auto; font-size: 3rem; line-height: 1.1;">
+      FIDO2 & WebAuthn<br>
+      <span style="color: var(--accent);">Implementation Study</span>
+    </h1>
+    
+    <p style="max-width: 65ch; margin-inline: auto; font-size: 1.1rem; color: var(--subtle); margin-top: 1.5rem; margin-bottom: 2.5rem;">
+      This project investigates the shift from <strong>shared secrets</strong> (passwords) to <strong>asymmetric cryptography</strong> (passkeys). 
+      We compare a manual Python implementation against a commercial SaaS solution to evaluate the security and architectural trade-offs.
+    </p>
+    
+    <div class="hero-actions" style="justify-content: center; gap: 1rem;">
+      {% if not user %}
+        <a class="button primary" href="{{ url_for('login') }}" style="padding: 0.8rem 2rem; font-size: 1.1rem;">
+          🚀 Start Lab (Login)
+        </a>
+        <a class="button secondary" href="{{ url_for('learn') }}">
+          📖 Read Documentation
+        </a>
+      {% else %}
+        <a class="button primary" href="{{ url_for('protected') }}">
+          🔓 Dashboard
+        </a>
+      {% endif %}
+    </div>
+  </section>
+
+  <section style="margin-top: 3rem;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem;">
+        <h2 style="margin: 0;">Project Roadmap</h2>
+        <span class="text-muted" style="font-size: 0.9rem;">Recommended testing flow</span>
+    </div>
+
+    <div class="grid grid-3">
+        <article class="card" style="margin-top: 0; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; font-size: 4rem; opacity: 0.05; font-weight: bold;">01</div>
+            <p class="section-eyebrow" style="color: var(--accent);">Evaluation</p>
+            <h3>Compare & Register</h3>
+            <p style="font-size: 0.9rem;">
+                On the Login page, toggle between the <strong>Protocol Auditing</strong> (Transparent) and <strong>Vendor</strong> (Opaque) tabs. 
+                Use the Protocol Auditing tab to register a key pair you can actually audit.
+            </p>
+            <div style="margin-top: 1rem; padding: 0.5rem; background: rgba(0,0,0,0.2); border-radius: 4px; font-size: 0.8rem; color: var(--subtle);">
+                <strong>Objective:</strong> Contrast Build vs. Buy.
+            </div>
+        </article>
+
+        <article class="card" style="margin-top: 0; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; font-size: 4rem; opacity: 0.05; font-weight: bold;">02</div>
+            <p class="section-eyebrow" style="color: var(--accent-warm);">Authentication</p>
+            <h3>Verify Access</h3>
+            <p style="font-size: 0.9rem;">
+                Log in using the registered credential. The server issues a random <code>challenge</code> nonce 
+                which acts as a replay protection mechanism.
+            </p>
+            <div style="margin-top: 1rem; padding: 0.5rem; background: rgba(0,0,0,0.2); border-radius: 4px; font-size: 0.8rem; color: var(--subtle);">
+                <strong>Objective:</strong> Test Phishing Resistance.
+            </div>
+        </article>
+
+        <article class="card" style="margin-top: 0; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; font-size: 4rem; opacity: 0.05; font-weight: bold;">03</div>
+            <p class="section-eyebrow" style="color: var(--accent-strong);">Forensics</p>
+            <h3>Chain of Custody</h3>
+            <p style="font-size: 0.9rem;">
+                Access the <a href="{{ url_for('protected') }}" style="color: var(--accent-strong);">Dashboard</a>. 
+                Use the <strong>Workflow</strong> tab to reconstruct the exact cryptographic handshake captured during the session.
+            </p>
+            <div style="margin-top: 1rem; padding: 0.5rem; background: rgba(0,0,0,0.2); border-radius: 4px; font-size: 0.8rem; color: var(--subtle);">
+                <strong>Objective:</strong> Validate session integrity.
+            </div>
+        </article>
+    </div>
+  </section>
+
+  <section class="card" style="margin-top: 3rem; border: 1px dashed rgba(255,255,255,0.1);">
+      <div style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: center; justify-content: space-around; opacity: 0.8;">
+          <div style="text-align: center;">
+              <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--subtle);">Library</div>
+              <div style="font-weight: bold; font-size: 1.1rem; color: white;">Python WebAuthn</div>
+          </div>
+          <div style="width: 1px; height: 40px; background: rgba(255,255,255,0.1);"></div>
+          <div style="text-align: center;">
+              <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--subtle);">Vendor Comparison</div>
+              <div style="font-weight: bold; font-size: 1.1rem; color: white;">Corbado</div>
+          </div>
+          <div style="width: 1px; height: 40px; background: rgba(255,255,255,0.1);"></div>
+          <div style="text-align: center;">
+              <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--subtle);">Backend</div>
+              <div style="font-weight: bold; font-size: 1.1rem; color: white;">Flask 3.0</div>
+          </div>
+          <div style="width: 1px; height: 40px; background: rgba(255,255,255,0.1);"></div>
+          <div style="text-align: center;">
+              <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--subtle);">Security</div>
+              <div style="font-weight: bold; font-size: 1.1rem; color: #34d399;">CSP + CSRF</div>
+          </div>
+      </div>
+  </section>
+{% endblock %}
