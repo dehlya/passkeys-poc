@@ -3,8 +3,8 @@
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Flask](https://img.shields.io/badge/flask-3.0+-green.svg)](https://flask.palletsprojects.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![E2E Tests](https://github.com/dehlya/passkeys-demo/actions/workflows/e2e.yml/badge.svg)](https://github.com/dehlya/passkeys-demo/actions/workflows/e2e.yml)
-[![Cross-Platform](https://github.com/dehlya/passkeys-demo/actions/workflows/smoke.yml/badge.svg)](https://github.com/dehlya/passkeys-demo/actions/workflows/smoke.yml)
+[![E2E Tests](https://github.com/dehlya/passkeys-demo/actions/workflows/webauthn-e2e.yml/badge.svg)](https://github.com/dehlya/passkeys-demo/actions/workflows/webauthn-e2e.yml)
+[![Cross-Platform](https://github.com/dehlya/passkeys-demo/actions/workflows/all-os-smoke.yml/badge.svg)](https://github.com/dehlya/passkeys-demo/actions/workflows/all-os-smoke.yml)
 
 > **Implementation Study**: Comparing manual WebAuthn/FIDO2 implementation vs. commercial SaaS solutions
 
